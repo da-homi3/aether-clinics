@@ -472,6 +472,13 @@ async function seedPlansSalesAndOps(
 }
 
 async function main() {
+  const alreadySeeded = await prisma.user.findFirst({
+    where: { email: "owner@aetherclinics.ke" },
+  });
+  if (alreadySeeded) {
+    console.log("Database already seeded, skipping.");
+    return;
+  }
   await resetDatabase();
   const roles = await seedRoles();
   const clinics = await seedClinics();
