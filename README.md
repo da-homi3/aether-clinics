@@ -1,36 +1,34 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Aether Clinics
 
-## Getting Started
+Multi-branch clinic operations platform: patients, appointments, consultations, billing, POS, inventory, RBAC, audit logs, 2FA, realtime notifications, PDF exports.
 
-First, run the development server:
+## Setup (SQLite demo)
 
 ```bash
+npm install
+npx prisma db push
+npx prisma db seed
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Demo login
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Owner: `owner@aetherclinics.ke` / `Demo1234!`
+- Reception: `reception.westlands@aetherclinics.ke` / `Demo1234!`
+- Doctor: `doctor.westlands@aetherclinics.ke` / `Demo1234!`
+- Pharmacist: `pharmacy.westlands@aetherclinics.ke` / `Demo1234!`
 
-## Learn More
+## Production / Postgres
 
-To learn more about Next.js, take a look at the following resources:
+See [DEPLOY.md](./DEPLOY.md) for Docker Postgres, hosted database URLs, and Vercel deploy notes.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Notable features
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Calendar day/week/month with drag-and-drop reschedule + clash checks
+- TOTP 2FA enrollment under Settings; login challenges when enabled
+- SSE live notification badge (`/api/realtime/stream`)
+- Custom role editor with granular permissions
+- Receipt/invoice Print + Download PDF
+- M-Pesa webhook integration point (never trusts client-only success)

@@ -1,0 +1,644 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Clinic {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  name          String
+  logoUrl       String?
+  address       String?
+  phone         String?
+  email         String?
+  website       String?
+  operatingHours String?
+  primaryColor  String   @default("#0F766E")
+  secondaryColor String  @default("#0EA5E9")
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  users            User[]
+  patients         Patient[]
+  departments      Department[]
+  appointments     Appointment[]
+  services         Service[]
+  products         Product[]
+  inventoryBatches InventoryBatch[]
+  inventoryMoves   InventoryMovement[]
+  suppliers        Supplier[]
+  purchaseOrders   PurchaseOrder[]
+  stockTransfersFrom StockTransfer[] @relation("TransferFrom")
+  stockTransfersTo   StockTransfer[] @relation("TransferTo")
+  invoices         Invoice[]
+  payments         Payment[]
+  sales            Sale[]
+  expenses         Expense[]
+  equipment        Equipment[]
+  consultations    Consultation[]
+  prescriptions    Prescription[]
+  treatmentPlans   TreatmentPlan[]
+  notifications    Notification[]
+  auditLogs        AuditLog[]
+  documents        Document[]
+  settings         ClinicSetting[]
+  staffSchedules   StaffSchedule[]
+}
+
+model Role {
+  id          String           @id @default(cuid())
+  name        String           @unique
+  description String?
+  isSystem    Boolean          @default(false)
+  users       User[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id    String           @id @default(cuid())
+  key   String           @unique
+  roles RolePermission[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model User {
+  id            String    @id @default(cuid())
+  staffId       String    @unique
+  email         String    @unique
+  passwordHash  String
+  name          String
+  phone         String?
+  department    String?
+  workingHours  String?
+  status        String    @default("active")
+  isOwner       Boolean   @default(false)
+  failedLogins  Int       @default(0)
+  lastLoginAt   DateTime?
+  totpSecret    String?
+  totpEnabled   Boolean   @default(false)
+  clinicId      String?
+  roleId        String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  clinic        Clinic?   @relation(fields: [clinicId], references: [id])
+  role          Role      @relation(fields: [roleId], references: [id])
+  loginActivity LoginActivity[]
+  auditLogs     AuditLog[]
+  schedules     StaffSchedule[]
+  appointments  Appointment[] @relation("DoctorAppointments")
+  consultations Consultation[]
+  prescriptions Prescription[]
+  notifications Notification[]
+}
+
+model LoginActivity {
+  id        String   @id @default(cuid())
+  userId    String
+  success   Boolean
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PlatformSetting {
+  id    String @id @default("platform")
+  name  String @default("Aether Clinics")
+  logoUrl String?
+  faviconUrl String?
+  primaryColor String @default("#0F766E")
+  secondaryColor String @default("#0EA5E9")
+  receiptFooter String @default("Thank you for choosing Aether Clinics.")
+  invoiceFooter String @default("Payment due within 14 days.")
+}
+
+model ClinicSetting {
+  id       String @id @default(cuid())
+  clinicId String
+  key      String
+  value    String
+  clinic   Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  @@unique([clinicId, key])
+}
+
+model Department {
+  id       String  @id @default(cuid())
+  clinicId String
+  name     String
+  clinic   Clinic  @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  services Service[]
+}
+
+model Patient {
+  id             String   @id @default(cuid())
+  patientNumber  String   @unique
+  fullName       String
+  phone          String
+  email          String?
+  dateOfBirth    DateTime?
+  gender         String?
+  address        String?
+  emergencyName  String?
+  emergencyPhone String?
+  insuranceInfo  String?
+  allergies      String?
+  medicalHistory String?
+  notes          String?
+  avatarUrl      String?
+  archived       Boolean  @default(false)
+  clinicId       String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  clinic         Clinic   @relation(fields: [clinicId], references: [id])
+  appointments   Appointment[]
+  consultations  Consultation[]
+  prescriptions  Prescription[]
+  vitals         Vital[]
+  invoices       Invoice[]
+  payments       Payment[]
+  sales          Sale[]
+  documents      Document[]
+  treatmentPlans TreatmentPlan[]
+  notesList      PatientNote[]
+}
+
+model PatientNote {
+  id        String   @id @default(cuid())
+  patientId String
+  body      String
+  createdAt DateTime @default(now())
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model Service {
+  id           String  @id @default(cuid())
+  clinicId     String
+  departmentId String?
+  name         String
+  description  String?
+  category     String
+  priceCents   Int
+  durationMin  Int     @default(30)
+  sessions     Int     @default(1)
+  isActive     Boolean @default(true)
+  clinic       Clinic  @relation(fields: [clinicId], references: [id])
+  department   Department? @relation(fields: [departmentId], references: [id])
+  appointments Appointment[]
+  invoiceItems InvoiceItem[]
+  treatmentPlans TreatmentPlan[]
+}
+
+model Appointment {
+  id           String   @id @default(cuid())
+  clinicId     String
+  patientId    String
+  doctorId     String?
+  serviceId    String?
+  department   String?
+  type         String   @default("consultation")
+  startAt      DateTime
+  endAt        DateTime
+  durationMin  Int
+  notes        String?
+  status       String   @default("pending")
+  archived     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  clinic       Clinic   @relation(fields: [clinicId], references: [id])
+  patient      Patient  @relation(fields: [patientId], references: [id])
+  doctor       User?    @relation("DoctorAppointments", fields: [doctorId], references: [id])
+  service      Service? @relation(fields: [serviceId], references: [id])
+  statusHistory AppointmentStatusHistory[]
+  consultation Consultation?
+  session      TreatmentSession?
+}
+
+model AppointmentStatusHistory {
+  id            String   @id @default(cuid())
+  appointmentId String
+  status        String
+  createdAt     DateTime @default(now())
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+}
+
+model TreatmentPlan {
+  id          String   @id @default(cuid())
+  clinicId    String
+  patientId   String
+  serviceId   String
+  invoiceId   String?
+  name        String
+  totalSessions Int
+  priceCents  Int
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  clinic      Clinic   @relation(fields: [clinicId], references: [id])
+  patient     Patient  @relation(fields: [patientId], references: [id])
+  service     Service  @relation(fields: [serviceId], references: [id])
+  sessions    TreatmentSession[]
+}
+
+model TreatmentSession {
+  id               String   @id @default(cuid())
+  treatmentPlanId  String
+  appointmentId    String?  @unique
+  sessionNumber    Int
+  status           String   @default("pending")
+  scheduledAt      DateTime?
+  completedAt      DateTime?
+  plan             TreatmentPlan @relation(fields: [treatmentPlanId], references: [id], onDelete: Cascade)
+  appointment      Appointment? @relation(fields: [appointmentId], references: [id])
+}
+
+model Consultation {
+  id            String   @id @default(cuid())
+  clinicId      String
+  patientId     String
+  doctorId      String
+  appointmentId String?  @unique
+  chiefComplaint String?
+  symptoms      String?
+  history       String?
+  allergies     String?
+  examination   String?
+  diagnosis     String?
+  treatment     String?
+  clinicalNotes String?
+  followUp      String?
+  nextAppointment String?
+  status        String   @default("in_progress")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  clinic        Clinic   @relation(fields: [clinicId], references: [id])
+  patient       Patient  @relation(fields: [patientId], references: [id])
+  doctor        User     @relation(fields: [doctorId], references: [id])
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+  vitals        Vital[]
+  prescriptions Prescription[]
+}
+
+model Vital {
+  id              String   @id @default(cuid())
+  patientId       String
+  consultationId  String?
+  systolic        Int?
+  diastolic       Int?
+  pulse           Int?
+  temperatureC    Float?
+  weightKg        Float?
+  heightCm        Float?
+  spo2            Int?
+  respiratoryRate Int?
+  bmi             Float?
+  recordedAt      DateTime @default(now())
+  patient         Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  consultation    Consultation? @relation(fields: [consultationId], references: [id])
+}
+
+model Prescription {
+  id              String   @id @default(cuid())
+  clinicId        String
+  patientId       String
+  doctorId        String
+  consultationId  String?
+  notes           String?
+  createdAt       DateTime @default(now())
+  clinic          Clinic   @relation(fields: [clinicId], references: [id])
+  patient         Patient  @relation(fields: [patientId], references: [id])
+  doctor          User     @relation(fields: [doctorId], references: [id])
+  consultation    Consultation? @relation(fields: [consultationId], references: [id])
+  items           PrescriptionItem[]
+}
+
+model PrescriptionItem {
+  id             String @id @default(cuid())
+  prescriptionId String
+  productId      String?
+  medicineName   String
+  dosage         String
+  frequency      String
+  duration       String
+  quantity       Int
+  instructions   String?
+  dispensed      Boolean @default(false)
+  prescription   Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+  product        Product? @relation(fields: [productId], references: [id])
+}
+
+model Product {
+  id            String  @id @default(cuid())
+  clinicId      String
+  sku           String
+  barcode       String?
+  name          String
+  category      String
+  type          String  @default("medicine")
+  purchaseCents Int
+  sellingCents  Int
+  minQty        Int     @default(10)
+  reorderLevel  Int     @default(20)
+  location      String?
+  isActive      Boolean @default(true)
+  clinic        Clinic  @relation(fields: [clinicId], references: [id])
+  batches       InventoryBatch[]
+  movements     InventoryMovement[]
+  saleItems     SaleItem[]
+  invoiceItems  InvoiceItem[]
+  poItems       PurchaseOrderItem[]
+  transferItems StockTransferItem[]
+  prescriptionItems PrescriptionItem[]
+  @@unique([clinicId, sku])
+}
+
+model InventoryBatch {
+  id           String    @id @default(cuid())
+  clinicId     String
+  productId    String
+  batchNumber  String
+  quantity     Int
+  expiryDate   DateTime?
+  createdAt    DateTime  @default(now())
+  clinic       Clinic    @relation(fields: [clinicId], references: [id])
+  product      Product   @relation(fields: [productId], references: [id])
+}
+
+model InventoryMovement {
+  id           String   @id @default(cuid())
+  clinicId     String
+  productId    String
+  type         String
+  quantity     Int
+  previousQty  Int
+  newQty       Int
+  reason       String?
+  staffName    String?
+  createdAt    DateTime @default(now())
+  clinic       Clinic   @relation(fields: [clinicId], references: [id])
+  product      Product  @relation(fields: [productId], references: [id])
+}
+
+model Supplier {
+  id            String  @id @default(cuid())
+  clinicId      String
+  name          String
+  contactPerson String?
+  phone         String?
+  email         String?
+  address       String?
+  notes         String?
+  outstandingCents Int  @default(0)
+  clinic        Clinic  @relation(fields: [clinicId], references: [id])
+  purchaseOrders PurchaseOrder[]
+}
+
+model PurchaseOrder {
+  id            String   @id @default(cuid())
+  clinicId      String
+  supplierId    String
+  status        String   @default("draft")
+  expectedAt    DateTime?
+  createdAt     DateTime @default(now())
+  clinic        Clinic   @relation(fields: [clinicId], references: [id])
+  supplier      Supplier @relation(fields: [supplierId], references: [id])
+  items         PurchaseOrderItem[]
+}
+
+model PurchaseOrderItem {
+  id              String @id @default(cuid())
+  purchaseOrderId String
+  productId       String
+  quantity        Int
+  unitCents       Int
+  receivedQty     Int    @default(0)
+  po              PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  product         Product @relation(fields: [productId], references: [id])
+}
+
+model StockTransfer {
+  id            String   @id @default(cuid())
+  fromClinicId  String
+  toClinicId    String
+  status        String   @default("requested")
+  requestedBy   String?
+  approvedBy    String?
+  createdAt     DateTime @default(now())
+  fromClinic    Clinic   @relation("TransferFrom", fields: [fromClinicId], references: [id])
+  toClinic      Clinic   @relation("TransferTo", fields: [toClinicId], references: [id])
+  items         StockTransferItem[]
+}
+
+model StockTransferItem {
+  id         String @id @default(cuid())
+  transferId String
+  productId  String
+  quantity   Int
+  transfer   StockTransfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  product    Product @relation(fields: [productId], references: [id])
+}
+
+model Equipment {
+  id              String    @id @default(cuid())
+  clinicId        String
+  name            String
+  assetNumber     String    @unique
+  serialNumber    String?
+  purchaseDate    DateTime?
+  purchaseCents   Int       @default(0)
+  supplier        String?
+  condition       String?
+  warranty        String?
+  maintenanceDate DateTime?
+  nextMaintenance DateTime?
+  department      String?
+  status          String    @default("active")
+  clinic          Clinic    @relation(fields: [clinicId], references: [id])
+}
+
+model Invoice {
+  id            String   @id @default(cuid())
+  invoiceNumber String   @unique
+  clinicId      String
+  patientId     String
+  status        String   @default("pending")
+  subtotalCents Int
+  discountCents Int      @default(0)
+  taxCents      Int      @default(0)
+  totalCents    Int
+  paidCents     Int      @default(0)
+  dueDate       DateTime?
+  notes         String?
+  createdAt     DateTime @default(now())
+  clinic        Clinic   @relation(fields: [clinicId], references: [id])
+  patient       Patient  @relation(fields: [patientId], references: [id])
+  items         InvoiceItem[]
+  payments      Payment[]
+  paymentPlan   PaymentPlan?
+}
+
+model InvoiceItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  serviceId   String?
+  productId   String?
+  description String
+  quantity    Int     @default(1)
+  unitCents   Int
+  totalCents  Int
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  service     Service? @relation(fields: [serviceId], references: [id])
+  product     Product? @relation(fields: [productId], references: [id])
+}
+
+model PaymentPlan {
+  id         String @id @default(cuid())
+  invoiceId  String @unique
+  installmentsCount Int
+  invoice    Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  installments Installment[]
+}
+
+model Installment {
+  id            String    @id @default(cuid())
+  paymentPlanId String
+  number        Int
+  amountCents   Int
+  dueDate       DateTime
+  paidAt        DateTime?
+  status        String    @default("pending")
+  method        String?
+  reference     String?
+  plan          PaymentPlan @relation(fields: [paymentPlanId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id            String   @id @default(cuid())
+  clinicId      String
+  patientId     String?
+  invoiceId     String?
+  saleId        String?
+  amountCents   Int
+  method        String
+  reference     String?
+  status        String   @default("completed")
+  staffName     String?
+  phone         String?
+  providerRef   String?
+  createdAt     DateTime @default(now())
+  clinic        Clinic   @relation(fields: [clinicId], references: [id])
+  patient       Patient? @relation(fields: [patientId], references: [id])
+  invoice       Invoice? @relation(fields: [invoiceId], references: [id])
+  sale          Sale?    @relation(fields: [saleId], references: [id])
+  refunds       Refund[]
+}
+
+model Refund {
+  id          String   @id @default(cuid())
+  paymentId   String
+  amountCents Int
+  reason      String?
+  createdAt   DateTime @default(now())
+  payment     Payment  @relation(fields: [paymentId], references: [id])
+}
+
+model Sale {
+  id            String   @id @default(cuid())
+  receiptNumber String   @unique
+  clinicId      String
+  patientId     String?
+  staffName     String?
+  subtotalCents Int
+  discountCents Int      @default(0)
+  totalCents    Int
+  method        String
+  createdAt     DateTime @default(now())
+  clinic        Clinic   @relation(fields: [clinicId], references: [id])
+  patient       Patient? @relation(fields: [patientId], references: [id])
+  items         SaleItem[]
+  payments      Payment[]
+}
+
+model SaleItem {
+  id          String @id @default(cuid())
+  saleId      String
+  productId   String
+  quantity    Int
+  unitCents   Int
+  totalCents  Int
+  sale        Sale   @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product     Product @relation(fields: [productId], references: [id])
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  clinicId    String
+  category    String
+  description String
+  amountCents Int
+  incurredAt  DateTime @default(now())
+  clinic      Clinic   @relation(fields: [clinicId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  clinicId  String?
+  userId    String?
+  type      String
+  title     String
+  body      String
+  relatedUrl String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  clinic    Clinic?  @relation(fields: [clinicId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  clinicId  String?
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  meta      String?
+  ip        String?
+  createdAt DateTime @default(now())
+  clinic    Clinic?  @relation(fields: [clinicId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model Document {
+  id        String   @id @default(cuid())
+  clinicId  String
+  patientId String?
+  title     String
+  url       String
+  createdAt DateTime @default(now())
+  clinic    Clinic   @relation(fields: [clinicId], references: [id])
+  patient   Patient? @relation(fields: [patientId], references: [id])
+}
+
+model StaffSchedule {
+  id        String  @id @default(cuid())
+  clinicId  String
+  userId    String
+  dayOfWeek Int
+  startTime String
+  endTime   String
+  onLeave   Boolean @default(false)
+  clinic    Clinic  @relation(fields: [clinicId], references: [id])
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

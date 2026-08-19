@@ -1,69 +1,128 @@
 import Image from "next/image";
+import Link from "next/link";
+import { featureVisuals, images, moduleVisuals } from "@/lib/images";
+import { SoftPhotoCard } from "@/components/section-visual";
 
-export default function Home() {
+export default function LandingPage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="bg-bg text-ink">
+      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+        <div className="font-semibold">Aether Clinics</div>
+        <div className="flex gap-3">
+          <Link href="/login" className="rounded-xl px-4 py-2 text-sm">
+            Sign in
+          </Link>
+          <Link href="/login" className="rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-white">
+            Get Started
+          </Link>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+      </header>
+
+      <section className="relative mx-auto max-w-6xl overflow-hidden px-6">
+        <div className="relative h-hero w-full overflow-hidden rounded-3xl">
+          <Image
+            src={images.heroConsultation}
+            alt="Modern clinic consultation"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-linear-to-r from-black/75 via-black/45 to-black/20 p-10 text-white">
+            <h1 className="max-w-2xl text-4xl font-semibold leading-tight sm:text-5xl">
+              Manage Every Clinic. Every Patient. Every Payment. From One Powerful Platform.
+            </h1>
+            <p className="mt-4 max-w-xl text-white/80">
+              A complete healthcare operations platform for appointments, patient records, consultations, billing,
+              payments, inventory and multi-branch management.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link href="/login" className="rounded-xl bg-white px-5 py-3 font-semibold text-black">
+                Get Started
+              </Link>
+              <Link href="#platform" className="rounded-xl border border-white/40 px-5 py-3">
+                Book a Demo
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="platform" className="mx-auto grid max-w-6xl gap-4 px-6 py-16 sm:grid-cols-3">
+        {featureVisuals.map((f) => (
+          <SoftPhotoCard key={f.title} src={f.src} alt={f.alt} title={f.title} body={f.body} />
+        ))}
+      </section>
+
+      <section className="mx-auto max-w-6xl px-6 pb-10">
+        <div className="relative overflow-hidden rounded-3xl border">
+          <div className="relative h-56 w-full sm:h-72">
             <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+              src={images.clinicInterior}
+              alt="Bright modern clinic corridor"
+              fill
+              sizes="100vw"
+              className="object-cover"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <div className="absolute inset-0 bg-black/50 p-8 text-white sm:p-10">
+              <h2 className="max-w-lg text-2xl font-semibold sm:text-3xl">Built for private healthcare groups</h2>
+              <p className="mt-3 max-w-md text-sm text-white/85">
+                From front desk check-in to pharmacy dispensing and owner analytics — one secure operations layer.
+              </p>
+            </div>
+          </div>
         </div>
-      </main>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-6 pb-16">
+        <h2 className="text-2xl font-semibold">Platform capabilities</h2>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {moduleVisuals.map((m) => (
+            <SoftPhotoCard key={m.label} src={m.src} alt={m.alt} title={m.label} />
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto grid max-w-6xl gap-4 px-6 pb-16 lg:grid-cols-2">
+        <div className="relative min-h-64 overflow-hidden rounded-3xl">
+          <Image src={images.pharmacy} alt="Pharmacy inventory shelves" fill className="object-cover" sizes="50vw" />
+          <div className="absolute inset-0 flex items-end bg-linear-to-t from-black/70 to-transparent p-6 text-white">
+            <div>
+              <p className="font-semibold">Pharmacy & inventory control</p>
+              <p className="mt-1 text-sm text-white/80">Expiry, low stock, transfers and POS in one flow.</p>
+            </div>
+          </div>
+        </div>
+        <div className="relative min-h-64 overflow-hidden rounded-3xl">
+          <Image src={images.laboratory} alt="Clinical laboratory workspace" fill className="object-cover" sizes="50vw" />
+          <div className="absolute inset-0 flex items-end bg-linear-to-t from-black/70 to-transparent p-6 text-white">
+            <div>
+              <p className="font-semibold">Clinical records that stay private</p>
+              <p className="mt-1 text-sm text-white/80">Role-based access keeps diagnoses with clinicians.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-6 pb-16" id="contact">
+        <div className="overflow-hidden rounded-3xl border bg-surface">
+          <div className="grid md:grid-cols-2">
+            <div className="relative min-h-48 md:min-h-full">
+              <Image src={images.nurseCare} alt="Healthcare professional" fill className="object-cover" sizes="50vw" />
+            </div>
+            <div className="p-8">
+              <h2 className="text-2xl font-semibold">FAQ</h2>
+              <p className="mt-3 text-sm text-muted">
+                Demo login: owner@aetherclinics.ke / Demo1234! — try reception, doctor and pharmacy roles with the same
+                password.
+              </p>
+              <Link href="/login" className="mt-6 inline-flex rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-white">
+                Open the platform
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
