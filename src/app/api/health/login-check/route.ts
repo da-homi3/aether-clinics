@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { verifyPassword } from "@/lib/auth";
+import { createSession, verifyPassword } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +12,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
   try {
-    const body = (await req.json().catch(() => ({}))) as { email?: string; password?: string };
+    const body = (await req.json().catch(() => ({}))) as {
+      email?: string;
+      password?: string;
+      issueSession?: boolean;
+    };
     const email = String(body.email || "owner@aetherclinics.ke").trim().toLowerCase();
     const password = String(body.password || "");
     const userCount = await prisma.user.count();
@@ -21,6 +25,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, stage: "lookup", userCount, error: "user_not_found" }, { status: 404 });
     }
     const passwordOk = password ? await verifyPassword(password, user.passwordHash) : null;
+    if (body.issueSession) {
+      if (!passwordOk) {
+        return NextResponse.json({ ok: false, stage: "auth", error: "invalid_password" }, { status: 401 });
+      }
+      await createSession(user.id);
+      return NextResponse.json({
+        ok: true,
+        sessionIssued: true,
+        user: { email: user.email, role: user.role.name },
+      });
+    }
     return NextResponse.json({
       ok: true,
       userCount,
